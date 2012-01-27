@@ -10,22 +10,22 @@
 class Asset_Engine_Less {
 
 	/**
-	 * Process asset content
+	 * Process asset with an engine
 	 *
-	 * @param   string  $content
-	 * @param   Asset   $asset
-	 * @return  string
+	 * @param   string  $file_contents
+	 * @param   array   $asset
+	 * @return  mixed
 	 */
-	static public function process($content, Asset $asset)
+	static public function process($file_contents, array $asset)
 	{
 		// Include the engine
 		include_once Kohana::find_file('vendor/lessphp', 'lessc');
 
 		// Set Less
 		$lc = new lessc();
-		$lc->importDir = dirname($asset->source_file()).DIRECTORY_SEPARATOR;
+		$lc->importDir = dirname($asset['local']).DIRECTORY_SEPARATOR;
 
-		return $lc->parse($content);
+		return $lc->parse($file_contents);
 	}
 
 } // End Asset_Engine_Less

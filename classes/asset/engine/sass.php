@@ -10,13 +10,13 @@
 class Asset_Engine_Sass {
 
 	/**
-	 * Process asset content
+	 * Process asset with an engine
 	 *
-	 * @param   string  $content
-	 * @param   Asset   $asset
-	 * @return  string
+	 * @param   string  $file_contents
+	 * @param   array   $asset
+	 * @return  mixed
 	 */
-	static public function process($content, Asset $asset)
+	static public function process($file_contents, array $asset)
 	{
 		// Set error reporting
 		$old = error_reporting(E_ALL & ~(E_NOTICE | E_DEPRECATED | E_STRICT));
@@ -28,12 +28,12 @@ class Asset_Engine_Sass {
 		$sass = new SassParser(array());
 
 		// Set content
-		$content = $sass->toCss($content, false);
+		$file_contents = $sass->toCss($file_contents, FALSE);
 
 		// Set error reporting
 		error_reporting($old);
 
-		return $content;
+		return $file_contents;
 	}
 
 } // End Asset_Engine_Sass

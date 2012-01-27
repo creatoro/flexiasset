@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
-* Combines assets and merges them to single files in production
+* Collection of assets
 *
 * @package    OpenBuildings/asset-merger
 * @author     Ivan Kerin
@@ -9,312 +9,251 @@
 */
 class Asset {
 
-	/**
-	 * @var  string  type
-	 */
-	public $type = NULL;
+	// Default short names for types
+	const JAVASCRIPT = 'script';
+	const STYLESHEET = 'style';
 
 	/**
-	 * @var  string  file
+	 * @var  string  default configuration
 	 */
-	public $file = NULL;
-	
-	/**
-	 * @var  array  engines
-	 */
-	protected $engines = array();
+	public static $default = 'default';
 
 	/**
-	 * @var  array processors
+	 * @var  array  Asset instances
 	 */
-	protected $processor = array();
+	public static $instances = array();
 
 	/**
-	 * @var   string  source file
-	 */
-	protected $source_file = NULL;
-
-	/**
-	 * @var   string  destination web file
-	 */
-	protected $destination_web = NULL;
-
-	/**
-	 * @var  string  destination file
-	 */
-	protected $destination_file = NULL;
-
-	/**
-	 * @var  string condition
-	 */
-	protected $condition = NULL;
-
-	/**
-	 * @var  int  last modified time
-	 */
-	private $_last_modified = NULL;
-
-	/**
-	 * Get the source file
+	 * Get a singleton Asset instance. If configuration is not specified,
+	 * the default configuration is loaded.
 	 *
-	 * @return string
+	 *     // Load the default asset configuration
+	 *     $asset = Asset::instance('head');
+	 *
+	 *     // Create a custom configured instance
+	 *     $asset = Asset::instance('head', 'custom');
+	 *
+	 * @param   string  $name    instance name
+	 * @param   array   $config  configuration parameters
+	 * @return  Asset
 	 */
-	public function source_file()
+	public static function instance($name = NULL, array $config = NULL)
 	{
-		return $this->source_file;
+		if ($name === NULL)
+		{
+			// Use the default instance name
+			$name = Asset::$default;
+		}
+
+		if ( ! isset(Asset::$instances[$name]))
+		{
+			if ($config === NULL)
+			{
+				// Load the configuration for this asset group
+				$config = Kohana::$config->load('flexiasset')->$name;
+			}
+
+			// Create the asset instance
+			new Asset($name, $config);
+		}
+
+		return Asset::$instances[$name];
 	}
 
 	/**
-	 * Get the web destination file
-	 *
-	 * @return string
+	 * @var  string  instance name
 	 */
-	public function destination_web()
+	protected $_instance;
+
+	/**
+	 * @var  array  configuration
+	 */
+	protected $_config;
+
+	/**
+	 * Stores the asset configuration locally and name the instance.
+	 *
+	 * [!!] This method cannot be accessed directly, you must use [Asset::instance].
+	 *
+	 * @param   string  $name
+	 * @param   array   $config
+	 * @return  void
+	 */
+	protected function __construct($name, array $config)
 	{
-		return $this->destination_web;
+		// Set the instance name
+		$this->_instance = $name;
+
+		// Store the config locally
+		$this->_config = $config;
+
+		// Store the asset instance
+		Asset::$instances[$name] = $this;
 	}
 
 	/**
-	 * Get the destination file
+	 * Add style
 	 *
-	 * @return string
+	 * @param   string  $file
+	 * @param   array   $attributes
+	 * @param   mixed   $protocol
+	 * @param   bool    $index
+	 * @return  Asset
 	 */
-	public function destination_file()
+	public function style($file, array $attributes = NULL, $protocol = NULL, $index = FALSE)
 	{
-		return $this->destination_file;
-	}
-	
-	/**
-	 * Get the condition
-	 *
-	 * @return  string
-	 */
-	public function condition()
-	{
-		return $this->condition;
+		return $this->add(Asset::STYLESHEET, $file, $attributes, $protocol, $index);
 	}
 
 	/**
-	 * Set up the environment
+	 * Add script
 	 *
-	 * @param  string  $type
-	 * @param  string  $file
-	 * @param  array   $options
+	 * @param   string  $file
+	 * @param   array   $attributes
+	 * @param   mixed   $protocol
+	 * @param   bool    $index
+	 * @return  Asset
 	 */
-	function __construct($type, $file, array $options = NULL)
+	public function script($file, array $attributes = NULL, $protocol = NULL, $index = FALSE)
 	{
-		// Set processor to use
-		$this->processor = Arr::get($options, 'processor', Kohana::$config->load('asset-merger.processor.'.$type));
+		return $this->add(Asset::JAVASCRIPT, $file, $attributes, $protocol, $index);
+	}
 
-		// Set condition
-		$this->condition = Arr::get($options, 'condition');
+	/**
+	 * @var  array  local assets
+	 */
+	protected $_local_assets = array();
 
-		// Set type and file
-		$this->type = $type;
-		$this->file = $file;
+	/**
+	 * @var  array  remote assets
+	 */
+	protected $_remote_assets = array();
 
-		// Check if the type is a valid type
-		Assets::require_valid_type($type);
+	/**
+	 * Adds assets to the appropriate type
+	 *
+	 * @param   string  $type
+	 * @param   string  $file
+	 * @param   array   $attributes
+	 * @param   mixed   $protocol
+	 * @param   bool    $index
+	 * @return  Asset
+	 */
+	protected function add($type, $file, $attributes, $protocol, $index)
+	{
+		// Add basic information to asset
+		$asset = array(
+			'type'       => $type,
+			'extension'  => $this->_config['extension'][$type],
+			'attributes' => $attributes,
+			'protocol'   => $protocol,
+			'index'      => $index,
+		);
 
+		// Get all file information
+		$asset = $this->file_info($file, $asset);
+
+		if ($condition = Arr::get($asset['attributes'], 'ie_condition'))
+		{
+			// Remove condition from attributes
+			unset($asset['attributes']['ie_condition']);
+		}
+
+		if ($asset['local'])
+		{
+			// Add to local assets
+			$this->_local_assets[$type][$condition][] = $asset;
+		}
+		else
+		{
+			// Add to remote assets
+			$this->_remote_assets[$type][$condition][] = $asset;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Get file information
+	 *
+	 * @param   string  $file
+	 * @param   array   $basic_info
+	 * @return  array
+	 */
+	protected function file_info($file, $basic_info)
+	{
+		// Set up the initial array to return
+		$info = array(
+			// Path that is used for the HTML tag
+			'remote' => $file,
+			// Path on the filesystem
+			'local'  => $file,
+		);
+
+		// Merge in basic info
+		$info = Arr::merge($info, $basic_info);
+
+		// Check to see if it's a remote asset
 		if (Valid::url($file))
 		{
-			// No remote files allowed
-			throw new Kohana_Exception('The asset :file must be local file', array(
-				':file' => $file,
-			));
+			// Disallow local path access
+			$info['local'] = NULL;
+
+			// Nothing else needed
+			return $info;
 		}
 
-		// Look for the specified file in each load path
-		foreach ( (array) Kohana::$config->load('asset-merger.load_paths.'.$type) as $path)
-		{
-			if (is_file($path.$file))
-			{
-				// Set the destination and source file
-				$this->destination_file = Assets::file_path($type, $file);
-				$this->source_file      = $path.$file;
+		// Set the full local path to file
+		$info['local'] = $this->_config['root'].$info['local'];
 
-				// Don't continue
-				break;
-			}
-		}
+		// Normalize the local path
+		$info['local'] = str_replace('\\', '/', $info['local']);
 
-		if ( ! $this->source_file)
-		{
-			// File not found
-			throw new Kohana_Exception('Asset :file of type :type not found inside :paths', array(
-				':file'  => $file,
-				':type'  => $type,
-				':paths' => join(', ', (array) Kohana::$config->load('asset-merger.load_paths.'.$type)),
-			));
-		}
+		// Get path information
+		$pathinfo = pathinfo($info['remote']);
 
-		if ( ! is_dir(dirname($this->destination_file)))
-		{
-			// Create directory for destination file
-			mkdir(dirname($this->destination_file), 0777, TRUE);
-		}
+		// Get basename
+		$info['basename'] = $pathinfo['basename'];
 
-		// Get the file parts
-		$fileparts = explode('.', basename($file));
+		// Get basename
+		$info['filename'] = $pathinfo['filename'];
 
-		// Extension index
-		$extension_index = array_search($this->type, $fileparts);
+		// Get the input directory
+		$info['input_dir'] = $pathinfo['dirname'].'/';
 
-		// Set engines
-		$this->engines = array_reverse(array_slice($fileparts, $extension_index + 1));
-
-		// Set web destination
-		$this->destination_web = Assets::web_path($type, $file);
+		return $info;
 	}
 
 	/**
-	 * Compile files
+	 * Renders the HTML code
 	 *
-	 * @param   bool  $process
+	 * @param   bool  $compile
 	 * @return  string
 	 */
-	public function compile($process = FALSE)
+	public function render($compile = FALSE)
 	{
-		// Get file contents
-		$content = file_get_contents($this->source_file);
+		// Set local and remote HTML
+		$local_html = $remote_html = '';
 
-		foreach ($this->engines as $engine) 
+		if ( ! empty($this->_local_assets))
 		{
-			// Process content with each engine
-			$content = Asset_Engine::process($engine, $content, $this);
+			// Local HTML
+			$local_html = new Asset_Local($this->_instance, $compile);
+
+			// Render local HTML
+			$local_html = $local_html->render($compile);
 		}
 
-		if ($process AND $this->processor)
+		if ( ! empty($this->_remote_assets))
 		{
-			// Process content with processor
-			$content = Asset_Processor::process($this->processor, $content);
+			// Remote HTML
+			$remote_html = new Asset_Remote($this->_instance, $compile);
+
+			// Render remote HTML
+			$remote_html = $remote_html->render($compile);
 		}
 
-		return $content;
+		return $local_html.$remote_html;
 	}
 
-	/**
-	 * Render HTML
-	 *
-	 * @param   bool  $process
-	 * @return  string
-	 */
-	public function render($process = FALSE)
-	{
-		if ($this->needs_recompile())
-		{
-			// Recompile file
-			file_put_contents($this->destination_file, $this->compile($process));
-		}
-
-		return Asset::html($this->type, $this->destination_web, $this->last_modified());
-	}
-
-	/**
-	 * Render inline HTML
-	 *
-	 * @param   bool  $process
-	 * @return  string
-	 */
-	public function inline($process = FALSE)
-	{
-		return Asset::html_inline($this->type, $this->compile($process));
-	}
-
-	public function __toString()
-	{
-		return $this->render();
-	}
-
-	/**
-	 * Get and set the last modified time
-	 *
-	 * @return integer
-	 */
-	public function last_modified()
-	{
-		if ($this->_last_modified === NULL)
-		{
-			// Set the last modified time
-			$this->_last_modified = filemtime($this->source_file);
-		}
-
-		return $this->_last_modified;
-	}
-
-	/**
-	 * Determine if recompilation is needed
-	 *
-	 * @return bool
-	 */
-	public function needs_recompile()
-	{
-		return Assets::is_modified_later($this->destination_file, $this->last_modified());
-	}
-
-	/**
-	 * Add conditions to asset
-	 *
-	 * @param   string  $content
-	 * @param   string  $condition
-	 * @return  string
-	 */
-	static public function conditional($content, $condition)
-	{
-		return "<!--[if ".$condition."]>\n". $content."\n<![endif]-->";
-	}
-
-	/**
-	 * Create HTML
-	 *
-	 * @param   string   $type
-	 * @param   string   $file
-	 * @param   integer  $last_modified
-	 * @return  string
-	 */
-	static function html($type, $file, $last_modified = NULL)
-	{
-		if ($last_modified)
-		{
-			// Add last modified time to file name
-			$file = $file.'?'.$last_modified;
-		}
-
-		// Set type for the proper HTML
-		switch($type)
-		{
-			case Assets::JAVASCRIPT:
-				$type = 'script';
-			break;
-			case Assets::STYLESHEET:
-				$type = 'style';
-			break;
-		}
-
-		return HTML::$type($file);
-	}
-
-	/**
-	 * Create inline HTML
-	 *
-	 * @param   string   $type
-	 * @param   string   $content
-	 * @return  string
-	 */
-	static function html_inline($type, $content)
-	{
-		// Set the proper inline HTML
-		switch($type)
-		{
-			case Assets::JAVASCRIPT:
-				$html = "<script type=\"text/javascript\">\n".$content."\n</script>";
-			break;
-			case Assets::STYLESHEET:
-				$html = "<style>\n".$content."\n</style>";
-			break;
-		}
-
-		return $html;
-	}
-
-} // End Asset
+} // End Assets

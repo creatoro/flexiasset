@@ -10,19 +10,20 @@
 class Asset_Engine_Php {
 
 	/**
-	 * Process asset content
+	 * Process asset with an engine
 	 *
-	 * @param   string  $content
-	 * @param   Asset   $asset
-	 * @return  string
+	 * @param   string  $file_contents
+	 * @param   array   $asset
+	 * @return  mixed
 	 */
-	static public function process($content, Asset $asset)
+	static public function process($file_contents, array $asset)
 	{
 		// Turn on output buffering
 		ob_start();
 
 		// Eval
-		eval('?>'.$content.'<?php ');
+		eval('?>'.$file_contents.' ?>');
+
 
 		return ob_get_clean();
 	}

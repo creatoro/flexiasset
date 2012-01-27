@@ -7,16 +7,16 @@
 * @copyright  (c) 2011 OpenBuildings Inc.
 * @license    http://creativecommons.org/licenses/by-sa/3.0/legalcode
 */
-class Asset_Engine_Coffee {
+class Asset_Engine_Coffee extends Asset_Engine {
 
 	/**
-	 * Process asset content
+	 * Process asset with an engine
 	 *
-	 * @param   string  $content
-	 * @param   Asset   $asset
-	 * @return  string
+	 * @param   string  $file_contents
+	 * @param   array   $asset
+	 * @return  mixed
 	 */
-	static public function process($content, Asset $asset)
+	static public function process($file_contents, array $asset)
 	{
 		// Set error reporting
 		$old = error_reporting(E_ALL & ~(E_NOTICE | E_DEPRECATED | E_STRICT));
@@ -25,12 +25,12 @@ class Asset_Engine_Coffee {
 		include_once Kohana::find_file('vendor/coffeescript', 'coffeescript');
 
 		// Set content
-		$content = CoffeeScript\compile($content);
+		$file_contents = CoffeeScript\compile($file_contents);
 
 		// Set error reporting
 		error_reporting($old);
 
-		return $content;
+		return $file_contents;
 	}
 
 } // End Asset_Engine_Coffee
