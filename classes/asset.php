@@ -71,6 +71,11 @@ class Asset {
 	protected $_config;
 
 	/**
+	 * @var  bool  render compiled files or original files
+	 */
+	protected $_display_compiled = FALSE;
+
+	/**
 	 * Stores the asset configuration locally and name the instance.
 	 *
 	 * [!!] This method cannot be accessed directly, you must use [Asset::instance].
@@ -86,6 +91,9 @@ class Asset {
 
 		// Store the config locally
 		$this->_config = $config;
+
+		// Set render compiled
+		$this->_display_compiled = $this->_config['display_compiled'];
 
 		// Store the asset instance
 		Asset::$instances[$name] = $this;
@@ -232,6 +240,12 @@ class Asset {
 	 */
 	public function render($compile = FALSE)
 	{
+		if ($compile)
+		{
+			// Force displaying of compiled files
+			$this->_display_compiled = TRUE;
+		}
+
 		// Set local and remote HTML
 		$local_html = $remote_html = '';
 

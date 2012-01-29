@@ -32,6 +32,9 @@ class Asset_Local extends Asset {
 		// Set merge
 		$this->_merge = $instance->_config['merge'];
 
+		// Set render compiled
+		$this->_display_compiled = $instance->_display_compiled;
+
 		// Set config
 		$this->_config = $instance->_config;
 
@@ -62,12 +65,56 @@ class Asset_Local extends Asset {
 					$html .= '<!--[if '.$condition.']>';
 				}
 
-				if ($compile)
+				foreach ($assets as $key => $asset)
 				{
-					// Compile assets
-					$assets = $this->compile($assets);
+					// Set output file for each asset
+					$assets[$key] = $this->output_file($asset);
+				}
 
-					if ( ! isset($assets['output']))
+				if ($this->_display_compiled)
+				{
+					if ($compile)
+					{
+						// Compile assets
+						$assets = $this->compile($assets);
+
+						if ($this->_merge)
+						{
+							// Save compiled and merged asset
+							$this->save($assets);
+						}
+						else
+						{
+							foreach ($assets as $asset)
+							{
+								// Save each compiled asset
+								$this->save($asset);
+							}
+						}
+					}
+
+					if ($this->_merge)
+					{
+						if ( ! $compile)
+						{
+							// Use the first asset's information for HTML as compile didn't run,
+							// so we have an array of assets
+							$assets = reset($assets);
+						}
+						else
+						{
+							// Add information for HTML code
+							$assets = Arr::merge($assets, array(
+								'attributes' => Arr::get($this->_config['merge_settings'][$assets['type']], 'attributes'),
+								'protocol'   => Arr::get($this->_config['merge_settings'][$assets['type']], 'protocol'),
+								'index'      => Arr::get($this->_config['merge_settings'][$assets['type']], 'index', FALSE),
+							));
+						}
+
+						// Add HTML code for merged assets
+						$html .= $this->html($assets);
+					}
+					else
 					{
 						// Assets are not merged, just processed or compressed
 						foreach ($assets as $asset)
@@ -76,26 +123,14 @@ class Asset_Local extends Asset {
 							$html .= $this->html($asset);
 						}
 					}
-					else
-					{
-						// Add information for HTML code
-						$assets = Arr::merge($assets, array(
-							'attributes' => Arr::get($this->_config['merge_settings'][$assets['type']], 'attributes'),
-							'protocol'   => Arr::get($this->_config['merge_settings'][$assets['type']], 'protocol'),
-							'index'      => Arr::get($this->_config['merge_settings'][$assets['type']], 'index', FALSE),
-						));
-
-						// Add HTML code for merged assets
-						$html .= $this->html($assets);
-					}
 				}
 				else
 				{
-					// Compile not needed
+					// Output original files without compiling
 					foreach ($assets as $asset)
 					{
-						// Save asset in a different directory if needed
-						$asset = $this->save($asset);
+						// Use the original filename as output
+						$asset['output'] = $asset['remote'];
 
 						// Add HTML code for each asset
 						$html .= $this->html($asset);
@@ -201,6 +236,7 @@ class Asset_Local extends Asset {
 					$asset_to_merge = array(
 						'type'       => $asset['type'],
 						'extension'  => $asset['extension'],
+						'output'     => $asset['output'],
 					);
 				}
 
@@ -221,36 +257,34 @@ class Asset_Local extends Asset {
 				// No merge needed
 				$compiled_content = $file_contents;
 
-				// Save file
-				$saved_file[] = $this->save($asset, $compiled_content);
+				// Add to compiled assets
+				$compiled_assets[] = Arr::merge($asset, array('compiled_content' => $compiled_content));
 			}
 		}
 
 		if ($this->_merge)
 		{
-			// Save merged file
-			$saved_file = $this->save($asset_to_merge, $compiled_content);
+			// Set compiled assets
+			$compiled_assets = Arr::merge($asset_to_merge, array('compiled_content' => $compiled_content));
 		}
 
-		return $saved_file;
+		return $compiled_assets;
 	}
 
 	/**
-	 * Save asset to file
+	 * Set the output file
 	 *
-	 * Saves the compiled content to a file, or copies the file as it is
-	 * if needed.
+	 * Sets the output file for each asset based on the configuration.
 	 *
 	 * @param   array   $asset
-	 * @param   string  $compiled_content
 	 * @return  array
 	 */
-	public function save($asset, $compiled_content = NULL)
+	protected function output_file($asset)
 	{
 		// Set basic file name
 		$file_name = Arr::get($this->_config['output_dir'], $asset['type'], $asset['input_dir']);
 
-		if ($this->_merge AND $compiled_content)
+		if ($this->_merge AND $this->_display_compiled)
 		{
 			// Get configured file name
 			$configured_name = Arr::get($this->_config['merge_settings'][$asset['type']], 'file', $this->_instance);
@@ -266,28 +300,40 @@ class Asset_Local extends Asset {
 		}
 		else
 		{
-			// No merging done, add original file name
+			// No merging will be done, add original file name
 			$file_name .= $asset['filename'];
 		}
 
 		// Add extension to file name
 		$file_name .= '.'.$asset['extension'];
 
-		if ($compiled_content !== NULL)
-		{
-			// Save compiled file
-			file_put_contents($file_name, $compiled_content);
-		}
-		elseif ($file_name !== $asset['remote'])
-		{
-			// Copy file
-			copy($asset['local'], $file_name);
-		}
-
 		// Add file name to asset
 		$asset['output'] = $file_name;
 
 		return $asset;
+	}
+
+	/**
+	 * Save asset to file
+	 *
+	 * Saves the compiled content to a file, or copies the file as it is
+	 * if needed.
+	 *
+	 * @param   array   $asset
+	 * @return  void
+	 */
+	protected function save($asset)
+	{
+		if (Arr::get($asset, 'compiled_content'))
+		{
+			// Save compiled file
+			file_put_contents($asset['output'], $asset['compiled_content']);
+		}
+		elseif ( ! $this->_merge AND $asset['output'] !== $asset['remote'])
+		{
+			// Copy file
+			copy($asset['local'], $asset['output']);
+		}
 	}
 
 	/**
