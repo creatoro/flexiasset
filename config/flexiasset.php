@@ -2,24 +2,49 @@
 
 return array(
 
-	'default' => array(
-		/**
-		 * Enable or disable the display of compiled files
-		 *
-		 * This will only set what file names are displayed in the
-		 * resulting HTML code and won't initiate compiling.
-		 *
-		 * If enabled the file names are created based on this configuration,
-		 * if disabled the original file names are displayed (which would be
-		 * the behavior if you use Kohana's HTML::style or HTML::script).
-		 *
-		 * Example:
-		 *
-		 * 	'display_compiled' => Kohana::$environment !== Kohana::DEVELOPMENT,
-		 *
-		 */
-		'display_compiled' => TRUE,
+	/**
+	 * Enable or disable the display of compiled files
+	 *
+	 * This is a site wide setting.
+	 *
+	 * This will only set what file names are displayed in the
+	 * resulting HTML code and won't initiate compiling.
+	 *
+	 * If enabled the file names are created based on this configuration,
+	 * if disabled the original file names are displayed (which would be
+	 * the behavior if you use Kohana's HTML::style or HTML::script).
+	 *
+	 * Example:
+	 *
+	 * 	'display_compiled' => Kohana::$environment !== Kohana::DEVELOPMENT,
+	 *
+	 */
+	'display_compiled' => TRUE,
 
+	/**
+	 * Enable or disable the merging of files
+	 *
+	 * This is a site wide setting.
+	 *
+	 * Example:
+	 *
+	 * 	'merge' => Kohana::$environment !== Kohana::DEVELOPMENT,
+	 *
+	 */
+	'merge'            => FALSE,
+
+	/**
+	 * The default configuration
+	 *
+	 * If you have multiple asset groups in your HTML, then you should create
+	 * a configuration like this for each group with a unique name.
+	 *
+	 * Be careful to not to use names like 'display_compiled' and 'merge'
+	 * as these are site wide setting names.
+	 *
+	 * Every setting is optional.
+	 */
+	'default' => array(
 		/**
 		 * The compressor to use for each asset type
 		 *
@@ -32,16 +57,6 @@ return array(
 		 *
 		 */
 		'compressor'       => array(),
-
-		/**
-		 * Enable or disable the merging of files
-		 *
-		 * Example:
-		 *
-		 * 	'merge' => Kohana::$environment !== Kohana::DEVELOPMENT,
-		 *
-		 */
-		'merge'            => FALSE,
 
 		/**
 		 * Settings for the merged files
@@ -65,23 +80,12 @@ return array(
 		 * 	),
 		 *
 		 */
-		'merge_settings'   => array(
-			Asset::STYLESHEET => array(),
-			Asset::JAVASCRIPT => array(),
-		),
+		'merge_settings'   => array(),
 
 		/**
 		 * The DocumentRoot of the website
 		 */
 		'root'             => DOCROOT,
-
-		/**
-		 * The extensions of the asset types
-		 */
-		'extension'        => array(
-			Asset::STYLESHEET => 'css',
-			Asset::JAVASCRIPT => 'js',
-		),
 
 		/**
 		 * Enable or disable cache busting of files

@@ -14,6 +14,11 @@ class Asset_Core {
 	const STYLESHEET = 'style';
 
 	/**
+	 * @var  bool  enable or disable compiling globally
+	 */
+	public static $compile;
+
+	/**
 	 * @var  string  default configuration
 	 */
 	public static $default = 'default';
@@ -93,7 +98,7 @@ class Asset_Core {
 		$this->_config = $config;
 
 		// Set render compiled
-		$this->_display_compiled = $this->_config['display_compiled'];
+		$this->_display_compiled = Kohana::$config->load('flexiasset.display_compiled');
 
 		// Store the asset instance
 		Asset::$instances[$name] = $this;
@@ -128,6 +133,14 @@ class Asset_Core {
 	}
 
 	/**
+	 * @var  array  the extensions of the compiled assets
+	 */
+	public static $extensions = array(
+		Asset::STYLESHEET => 'css',
+		Asset::JAVASCRIPT => 'js',
+	);
+
+	/**
 	 * @var  array  local assets
 	 */
 	protected $_local_assets = array();
@@ -152,7 +165,7 @@ class Asset_Core {
 		// Add basic information to asset
 		$asset = array(
 			'type'       => $type,
-			'extension'  => $this->_config['extension'][$type],
+			'extension'  => Asset::$extensions[$type],
 			'attributes' => $attributes,
 			'protocol'   => $protocol,
 			'index'      => $index,
@@ -212,7 +225,7 @@ class Asset_Core {
 		}
 
 		// Set the full local path to file
-		$info['local'] = $this->_config['root'].$info['local'];
+		$info['local'] = Arr::get($this->_config, 'root', DOCROOT).$info['local'];
 
 		// Normalize the local path
 		$info['local'] = str_replace('\\', '/', $info['local']);
@@ -240,6 +253,12 @@ class Asset_Core {
 	 */
 	public function render($compile = FALSE)
 	{
+		if (Asset::$compile !== NULL)
+		{
+			// Set compile to global setting
+			$compile = Asset::$compile;
+		}
+
 		if ($compile)
 		{
 			// Force displaying of compiled files

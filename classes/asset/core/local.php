@@ -30,9 +30,9 @@ class Asset_Core_Local extends Asset {
 		$this->_instance = $instance->_instance;
 
 		// Set merge
-		$this->_merge = $instance->_config['merge'];
+		$this->_merge = Kohana::$config->load('flexiasset.merge');
 
-		// Set render compiled
+		// Set display compiled
 		$this->_display_compiled = $instance->_display_compiled;
 
 		// Set config
@@ -103,11 +103,20 @@ class Asset_Core_Local extends Asset {
 						}
 						else
 						{
+							// Get merge settings
+							$merge_settings = Arr::get($this->_config, 'merge_settings', array(
+								Asset::STYLESHEET => array(),
+								Asset::JAVASCRIPT => array(),
+							));
+
+							// Get merge settings for current type
+							$merge_settings = Arr::get($merge_settings, $assets['type'], array());
+
 							// Add information for HTML code
 							$assets = Arr::merge($assets, array(
-								'attributes' => Arr::get($this->_config['merge_settings'][$assets['type']], 'attributes'),
-								'protocol'   => Arr::get($this->_config['merge_settings'][$assets['type']], 'protocol'),
-								'index'      => Arr::get($this->_config['merge_settings'][$assets['type']], 'index', FALSE),
+								'attributes' => Arr::get($merge_settings, 'attributes'),
+								'protocol'   => Arr::get($merge_settings, 'protocol'),
+								'index'      => Arr::get($merge_settings, 'index', FALSE),
 							));
 						}
 
@@ -171,7 +180,7 @@ class Asset_Core_Local extends Asset {
 			$fileparts = explode('.', $asset['basename']);
 
 			// Get the extension index
-			$extension_index = array_search($this->_config['extension'][$asset['type']], $fileparts);
+			$extension_index = array_search(Asset::$extensions[$asset['type']], $fileparts);
 
 			// Set engines
 			$engines = array_reverse(array_slice($fileparts, $extension_index + 1));
@@ -202,7 +211,10 @@ class Asset_Core_Local extends Asset {
 				}
 			}
 
-			if ($compressor = Arr::get($this->_config['compressor'], $asset['type']))
+			// Get compressor
+			$compressor = Arr::get($this->_config, 'compressor', array());
+
+			if ($compressor = Arr::get($compressor, $asset['type']))
 			{
 				// Set compressor class
 				$compressor_class = 'Asset_Compressor_'.ucfirst($compressor);
@@ -281,13 +293,25 @@ class Asset_Core_Local extends Asset {
 	 */
 	protected function output_file($asset)
 	{
+		// Get output directory
+		$output_dir = Arr::get($this->_config, 'output_dir', array());
+
 		// Set basic file name
-		$file_name = Arr::get($this->_config['output_dir'], $asset['type'], $asset['input_dir']);
+		$file_name = Arr::get($output_dir, $asset['type'], $asset['input_dir']);
 
 		if ($this->_merge AND $this->_display_compiled)
 		{
+			// Get merge settings
+			$merge_settings = Arr::get($this->_config, 'merge_settings', array(
+				Asset::STYLESHEET => array(),
+				Asset::JAVASCRIPT => array(),
+			));
+
+			// Get merge settings for current type
+			$merge_settings = Arr::get($merge_settings, $asset['type'], array());
+
 			// Get configured file name
-			$configured_name = Arr::get($this->_config['merge_settings'][$asset['type']], 'file', $this->_instance);
+			$configured_name = Arr::get($merge_settings, 'file', $this->_instance);
 
 			if (is_array($configured_name))
 			{
@@ -344,7 +368,7 @@ class Asset_Core_Local extends Asset {
 	 */
 	protected function html($asset)
 	{
-		if ($this->_config['cache_bust'])
+		if (Arr::get($this->_config, 'cache_bust'))
 		{
 			// Add cache busting to file name
 			$asset['output'] .= '?v'.time();
