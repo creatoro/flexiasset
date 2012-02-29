@@ -297,11 +297,19 @@ class Asset_Core_Local extends Asset {
 	 */
 	protected function output_file($asset, $compile)
 	{
-		// Get output directory
-		$output_dir = Arr::get($this->_config, 'output_dir', array());
+		if ($this->_merge)
+		{
+			// Get output directory
+			$output_dir = Arr::get($this->_config, 'output_dir', array());
 
-		// Set basic file name
-		$file_name = Arr::get($output_dir, $asset['type'], $asset['input_dir']);
+			// Set basic file name
+			$file_name = Arr::get($output_dir, $asset['type'], $asset['input_dir']);
+		}
+		else
+		{
+			// Set basic file name
+			$file_name = $asset['input_dir'];
+		}
 
 		if ($this->_merge AND $this->_display_compiled)
 		{
