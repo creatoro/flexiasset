@@ -71,7 +71,7 @@ class Asset_Core_Local extends Asset {
 				foreach ($assets as $key => $asset)
 				{
 					// Set output file for each asset
-					$assets[$key] = $this->output_file($asset);
+					$assets[$key] = $this->output_file($asset, $compile);
 				}
 
 				if ($this->_display_compiled)
@@ -217,7 +217,7 @@ class Asset_Core_Local extends Asset {
 			// Get compressor
 			$compressor = Arr::get($this->_config, 'compressor', array());
 
-			if ($compressor = Arr::get($compressor, $asset['type']))
+			if ($compressor = Arr::get($compressor, $asset['type']) AND ! strstr($asset['filename'], '.min.'))
 			{
 				// Set compressor class
 				$compressor_class = 'Asset_Compressor_'.ucfirst($compressor);
@@ -292,9 +292,10 @@ class Asset_Core_Local extends Asset {
 	 * Sets the output file for each asset based on the configuration.
 	 *
 	 * @param   array   $asset
+	 * @param   bool    $compile
 	 * @return  array
 	 */
-	protected function output_file($asset)
+	protected function output_file($asset, $compile)
 	{
 		// Get output directory
 		$output_dir = Arr::get($this->_config, 'output_dir', array());
@@ -337,7 +338,7 @@ class Asset_Core_Local extends Asset {
 		// Add file name to asset
 		$asset['output'] = $file_name;
 
-		if ($asset['output'] === $asset['remote'] AND ($this->_merge OR count(Arr::get($this->_config, 'compressor', array())) > 0))
+		if ($compile AND $asset['output'] === $asset['remote'] AND ($this->_merge OR count(Arr::get($this->_config, 'compressor', array())) > 0))
 		{
 			// Don't allow the original asset to be overwritten
 			throw new Kohana_Exception('Using these settings the original asset :asset will be overwritten', array(
