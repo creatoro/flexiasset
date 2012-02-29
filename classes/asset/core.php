@@ -55,7 +55,7 @@ class Asset_Core {
 			if ($config === NULL)
 			{
 				// Load the configuration for this asset group
-				$config = Kohana::$config->load('flexiasset')->$name;
+				$config = Kohana::$config->load('flexiasset')->as_array();
 			}
 
 			// Create the asset instance
@@ -69,6 +69,11 @@ class Asset_Core {
 	 * @var  string  instance name
 	 */
 	protected $_instance;
+
+	/**
+	 * @var  array  global configuration
+	 */
+	protected $_global_config;
 
 	/**
 	 * @var  array  configuration
@@ -91,14 +96,25 @@ class Asset_Core {
 	 */
 	protected function __construct($name, array $config)
 	{
+		if ( ! isset($config[$name]))
+		{
+			// No such configuration
+			throw new Kohana_Exception('The asset configuration :config does not exist', array(
+				':config' => $name,
+			));
+		}
+
 		// Set the instance name
 		$this->_instance = $name;
 
+		// Store the global config locally
+		$this->_global_config = $config;
+
 		// Store the config locally
-		$this->_config = $config;
+		$this->_config = $config[$name];
 
 		// Set render compiled
-		$this->_display_compiled = Kohana::$config->load('flexiasset.display_compiled');
+		$this->_display_compiled = Arr::get($this->_config, 'display_compiled', TRUE);
 
 		// Store the asset instance
 		Asset::$instances[$name] = $this;

@@ -29,17 +29,20 @@ class Asset_Core_Local extends Asset {
 		// Set instance
 		$this->_instance = $instance->_instance;
 
-		// Set merge
-		$this->_merge = Kohana::$config->load('flexiasset.merge');
-
-		// Set display compiled
-		$this->_display_compiled = $instance->_display_compiled;
+		// Set global config
+		$this->_global_config = $instance->_global_config;
 
 		// Set config
 		$this->_config = $instance->_config;
 
 		// Set assets
 		$this->_assets = $instance->_local_assets;
+
+		// Set merge
+		$this->_merge = $this->_global_config['merge'];
+
+		// Set display compiled
+		$this->_display_compiled = $instance->_display_compiled;
 	}
 
 	/**
@@ -333,6 +336,14 @@ class Asset_Core_Local extends Asset {
 
 		// Add file name to asset
 		$asset['output'] = $file_name;
+
+		if ($asset['output'] === $asset['remote'] AND ($this->_merge OR count(Arr::get($this->_config, 'compressor', array())) > 0))
+		{
+			// Don't allow the original asset to be overwritten
+			throw new Kohana_Exception('Using these settings the original asset :asset will be overwritten', array(
+				':asset' => $asset['remote'],
+			));
+		}
 
 		return $asset;
 	}
