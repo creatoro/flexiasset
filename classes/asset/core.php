@@ -252,7 +252,7 @@ class Asset_Core {
 		// Get basename
 		$info['basename'] = $pathinfo['basename'];
 
-		// Get basename
+		// Get filename
 		$info['filename'] = $pathinfo['filename'];
 
 		// Get the input directory
