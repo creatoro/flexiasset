@@ -349,7 +349,7 @@ class Asset_Core_Local extends Asset {
 		if ($compile AND $asset['output'] === $asset['remote'] AND ($this->_merge OR count(Arr::get($this->_config, 'compressor', array())) > 0))
 		{
 			// Don't allow the original asset to be overwritten
-			throw new Kohana_Exception('Using these settings the original asset :asset will be overwritten', array(
+			throw new Kohana_Exception('Using these settings the original asset :asset would be overwritten', array(
 				':asset' => $asset['remote'],
 			));
 		}
