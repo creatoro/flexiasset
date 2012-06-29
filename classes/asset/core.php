@@ -113,7 +113,7 @@ class Asset_Core {
 		// Store the config locally
 		$this->_config = $config[$name];
 
-		// Set render compiled
+		// Set display compiled
 		$this->_display_compiled = Arr::get($this->_global_config, 'display_compiled', TRUE);
 
 		// Store the asset instance
