@@ -114,7 +114,7 @@ class Asset_Core {
 		$this->_config = $config[$name];
 
 		// Set render compiled
-		$this->_display_compiled = Arr::get($this->_config, 'display_compiled', TRUE);
+		$this->_display_compiled = Arr::get($this->_global_config, 'display_compiled', TRUE);
 
 		// Store the asset instance
 		Asset::$instances[$name] = $this;
@@ -131,7 +131,7 @@ class Asset_Core {
 	 */
 	public function style($file, array $attributes = NULL, $protocol = NULL, $index = FALSE)
 	{
-		return $this->add(Asset::STYLESHEET, $file, $attributes, $protocol, $index);
+        return $this->add(Asset::STYLESHEET, $file, $attributes, $protocol, $index);
 	}
 
 	/**
@@ -269,7 +269,7 @@ class Asset_Core {
 	 */
 	public function render($compile = FALSE)
 	{
-		if (Asset::$compile !== NULL)
+        if (Asset::$compile !== NULL)
 		{
 			// Set compile to global setting
 			$compile = Asset::$compile;

@@ -81,19 +81,19 @@ class Asset_Core_Local extends Asset {
 						// Compile assets
 						$assets = $this->compile($assets);
 
-						if ($this->_merge)
-						{
-							// Save compiled and merged asset
-							$this->save($assets);
-						}
-						else
-						{
-							foreach ($assets as $asset)
-							{
-								// Save each compiled asset
-								$this->save($asset);
-							}
-						}
+                        if ($this->_merge)
+                        {
+                            // Save compiled and merged asset
+                            $this->save($assets);
+                        }
+                        else
+                        {
+                            foreach ($assets as $asset)
+                            {
+                                // Save each compiled asset
+                                $this->save($asset);
+                            }
+                        }
 					}
 
 					if ($this->_merge)
@@ -346,6 +346,46 @@ class Asset_Core_Local extends Asset {
 		// Add file name to asset
 		$asset['output'] = $file_name;
 
+        if ($this->_display_compiled AND Arr::get($this->_config, 'cache_bust'))
+        {
+            // Set cache
+            $cache = Cache::instance();
+
+            // Try to get previous timestamp from cache
+            $timestamp = $cache->get($asset['output']);
+
+            if ($compile)
+            {
+                if ($timestamp !== NULL)
+                {
+                    // Set previous filename
+                    $previous_file = str_replace('.'.$asset['extension'], '.'.$timestamp.'.'.$asset['extension'], $asset['output']);
+
+                    if (is_file($previous_file))
+                    {
+                        // Delete previous file
+                        unlink($previous_file);
+                    }
+                }
+
+                // Set the timestamp to current time
+                $timestamp = time();
+
+                // Cache timestamp
+                $cache->set($asset['output'], $timestamp, (Date::YEAR * 10));
+            }
+            elseif ($timestamp === NULL)
+            {
+                // Cache busting was applied without initiating compile
+                // first, as result there are no files with applied
+                // cache bust.
+                throw new Kohana_Exception('Files with cache busting are not yet created, initiate compiling first.');
+            }
+
+            // Add cache busting to file name
+            $asset['output'] = str_replace('.'.$asset['extension'], '.'.$timestamp.'.'.$asset['extension'], $asset['output']);
+        }
+
 		if ($compile AND $asset['output'] === $asset['remote'] AND ($this->_merge OR count(Arr::get($this->_config, 'compressor', array())) > 0))
 		{
 			// Don't allow the original asset to be overwritten
@@ -368,7 +408,7 @@ class Asset_Core_Local extends Asset {
 	 */
 	protected function save($asset)
 	{
-		if (Arr::get($asset, 'compiled_content'))
+        if (Arr::get($asset, 'compiled_content'))
 		{
 			// Save compiled file
 			file_put_contents($asset['output'], $asset['compiled_content']);
@@ -388,12 +428,6 @@ class Asset_Core_Local extends Asset {
 	 */
 	protected function html($asset)
 	{
-		if (Arr::get($this->_config, 'cache_bust'))
-		{
-			// Add cache busting to file name
-			$asset['output'] .= '?v'.time();
-		}
-
 		// Set HTML
 		$html = HTML::$asset['type']($asset['output'], $asset['attributes'], $asset['protocol'], $asset['index']);
 
