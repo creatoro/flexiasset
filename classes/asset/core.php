@@ -269,6 +269,9 @@ class Asset_Core {
 	 */
 	public function render($compile = FALSE)
 	{
+        // Set cache
+        $cache = Cache::instance();
+
         if (Asset::$compile !== NULL)
 		{
 			// Set compile to global setting
@@ -280,6 +283,12 @@ class Asset_Core {
 			// Force displaying of compiled files
 			$this->_display_compiled = TRUE;
 		}
+
+        if ( ! $compile AND $this->_display_compiled AND ($cached_html = $cache->get('flexiasset.'.$this->_instance)))
+        {
+            // Return cached HTML
+            return $cached_html;
+        }
 
 		// Set local and remote HTML
 		$local_html = $remote_html = '';
@@ -302,7 +311,16 @@ class Asset_Core {
 			$remote_html = $remote_html->render($compile);
 		}
 
-		return $local_html.$remote_html;
+        // Set HTML
+        $html = $local_html.$remote_html;
+
+        if ($compile)
+        {
+            // Cache HTML
+            $cache->set('flexiasset.'.$this->_instance, $html, (Date::YEAR * 10));
+        }
+
+		return $html;
 	}
 
 } // End Asset_Core
