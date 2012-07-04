@@ -268,7 +268,7 @@ class Asset_Core_Local extends Asset {
 				}
 
 				// Add comment to compiled content
-				$compiled_content .= "/* File: ".$asset['remote']."\n   Compiled at: ".date("Y-m-d H:i:s")." \n================================ */\n";
+				$compiled_content .= '/* File: '.$asset['remote']."\n   Compiled at: ".date('Y-m-d H:i:s')." \n================================ */\n";
 
 				// Add to compiled content
 				$compiled_content .= $file_contents;
