@@ -360,8 +360,11 @@ class Asset_Core_Local extends Asset {
             // Set cache
             $cache = Cache::instance();
 
+            // Set cache id
+            $cache_id = 'flexiasset.'.$this->_instance.'.'.$asset['output'];
+
             // Try to get previous timestamp from cache
-            $timestamp = $cache->get($asset['output']);
+            $timestamp = $cache->get($cache_id);
 
             if ($compile)
             {
@@ -381,7 +384,7 @@ class Asset_Core_Local extends Asset {
                 $timestamp = time();
 
                 // Cache timestamp
-                $cache->set($asset['output'], $timestamp, Asset::$cache_lifetime);
+                $cache->set($cache_id, $timestamp, Asset::$cache_lifetime);
             }
             elseif ($timestamp === NULL)
             {
