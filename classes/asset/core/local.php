@@ -381,7 +381,7 @@ class Asset_Core_Local extends Asset {
                 $timestamp = time();
 
                 // Cache timestamp
-                $cache->set($asset['output'], $timestamp, (Date::YEAR * 10));
+                $cache->set($asset['output'], $timestamp, Asset::$cache_lifetime);
             }
             elseif ($timestamp === NULL)
             {

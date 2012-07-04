@@ -268,6 +268,11 @@ class Asset_Core {
 		return $info;
 	}
 
+    /**
+     * @var  string  default configuration
+     */
+    public static $cache_lifetime = Date::YEAR;
+
 	/**
 	 * Renders the HTML code
 	 *
@@ -324,7 +329,7 @@ class Asset_Core {
         $html = $local_html.$remote_html;
 
         // Cache HTML
-        $cache->set('flexiasset.'.$this->_instance, $html, (Date::YEAR * 10));
+        $cache->set('flexiasset.'.$this->_instance, $html, Asset::$cache_lifetime);
 
 		return $html;
 	}
