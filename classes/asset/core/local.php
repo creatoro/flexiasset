@@ -171,7 +171,7 @@ class Asset_Core_Local extends Asset {
 	 *
 	 * @param   array  $assets
 	 * @return  mixed
-     * @uses    Kohana_Exception
+     * @uses    Asset_Exception
      * @uses    Arr::get
      * @uses    Arr::merge
 	 */
@@ -207,7 +207,7 @@ class Asset_Core_Local extends Asset {
 					if ( ! class_exists($engine_class))
 					{
 						// No such engine
-						throw new Kohana_Exception('The asset engine :engine does not exist', array(
+						throw new Asset_Exception('The asset engine :engine does not exist', array(
 							':engine' => strtoupper($engine),
 						));
 					}
@@ -231,7 +231,7 @@ class Asset_Core_Local extends Asset {
 				if ( ! class_exists($compressor_class))
 				{
 					// No such engine
-					throw new Kohana_Exception('The asset compressor :compressor does not exist', array(
+					throw new Asset_Exception('The asset compressor :compressor does not exist', array(
 						':compressor' => strtoupper($compressor),
 					));
 				}
@@ -302,7 +302,7 @@ class Asset_Core_Local extends Asset {
 	 * @return  array
      * @uses    Arr::get
      * @uses    Cache::instance
-     * @uses    Kohana_Exception
+     * @uses    Asset_Exception
 	 */
 	protected function output_file($asset, $compile)
 	{
@@ -388,7 +388,7 @@ class Asset_Core_Local extends Asset {
                 // Cache busting was applied without initiating compile
                 // first, as result there are no files with applied
                 // cache bust.
-                throw new Kohana_Exception('Files with cache busting are not yet created, initiate compiling first.');
+                throw new Asset_Exception('Files with cache busting are not yet created, initiate compiling first.');
             }
 
             // Add cache busting to file name
@@ -398,7 +398,7 @@ class Asset_Core_Local extends Asset {
 		if ($compile AND $asset['output'] === $asset['remote'] AND ($this->_merge OR count(Arr::get($this->_config, 'compressor', array())) > 0))
 		{
 			// Don't allow the original asset to be overwritten
-			throw new Kohana_Exception('Using these settings the original asset :asset would be overwritten', array(
+			throw new Asset_Exception('Using these settings the original asset :asset would be overwritten', array(
 				':asset' => $asset['remote'],
 			));
 		}

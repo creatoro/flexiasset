@@ -94,7 +94,7 @@ class Asset_Core {
 	 * @param   string  $name
 	 * @param   array   $config
 	 * @return  void
-     * @uses    Kohana_Exception
+     * @uses    Asset_Exception
      * @uses    Arr::get
 	 */
 	protected function __construct($name, array $config)
@@ -102,7 +102,7 @@ class Asset_Core {
 		if ( ! isset($config[$name]))
 		{
 			// No such configuration
-			throw new Kohana_Exception('The asset configuration :config does not exist', array(
+			throw new Asset_Exception('The asset configuration :config does not exist', array(
 				':config' => $name,
 			));
 		}
