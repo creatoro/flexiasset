@@ -20,6 +20,7 @@ class Asset_Core_Remote extends Asset {
 	 * @param   string  $name
 	 * @param   bool    $compile
 	 * @return  void
+     * @uses    Asset::instance
 	 */
 	public function __construct($name, $compile)
 	{
@@ -85,6 +86,8 @@ class Asset_Core_Remote extends Asset {
 	 *
 	 * @param   array  $asset
 	 * @return  mixed
+     * @uses    HTML::style
+     * @uses    HTML::script
 	 */
 	protected function html($asset)
 	{

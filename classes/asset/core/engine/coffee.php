@@ -15,6 +15,8 @@ class Asset_Core_Engine_Coffee extends Asset_Engine {
 	 * @param   string  $file_contents
 	 * @param   array   $asset
 	 * @return  mixed
+     * @uses    Kohana::find_file
+     * @uses    CoffeeScript
 	 */
 	static public function process($file_contents, array $asset)
 	{

@@ -14,6 +14,8 @@ class Asset_Core_Compressor_Jsmin extends Asset_Compressor {
 	 *
 	 * @param   string  $content
 	 * @return  mixed
+     * @uses    Kohana::find_file
+     * @uses    jsmin::minify
 	 */
 	static public function process($content)
 	{

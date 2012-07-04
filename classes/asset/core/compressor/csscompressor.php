@@ -14,6 +14,8 @@ class Asset_Core_Compressor_Csscompressor extends Asset_Compressor {
 	 *
 	 * @param   string  $content
 	 * @return  mixed
+     * @uses    Kohana::find_file
+     * @uses    minify_css_compressor::process
 	 */
 	static public function process($content)
 	{

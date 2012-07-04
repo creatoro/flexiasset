@@ -20,6 +20,7 @@ class Asset_Core_Local extends Asset {
 	 * @param   string  $name
 	 * @param   bool    $compile
 	 * @return  void
+     * @uses    Asset::instance
 	 */
 	public function __construct($name, $compile)
 	{
@@ -52,6 +53,8 @@ class Asset_Core_Local extends Asset {
 	 *
 	 * @param   bool  $compile
 	 * @return  string
+     * @uses    Arr::get
+     * @uses    Arr::merge
 	 */
 	public function render($compile = FALSE)
 	{
@@ -168,6 +171,9 @@ class Asset_Core_Local extends Asset {
 	 *
 	 * @param   array  $assets
 	 * @return  mixed
+     * @uses    Kohana_Exception
+     * @uses    Arr::get
+     * @uses    Arr::merge
 	 */
 	protected function compile($assets)
 	{
@@ -294,6 +300,9 @@ class Asset_Core_Local extends Asset {
 	 * @param   array   $asset
 	 * @param   bool    $compile
 	 * @return  array
+     * @uses    Arr::get
+     * @uses    Cache::instance
+     * @uses    Kohana_Exception
 	 */
 	protected function output_file($asset, $compile)
 	{
@@ -405,6 +414,7 @@ class Asset_Core_Local extends Asset {
 	 *
 	 * @param   array   $asset
 	 * @return  void
+     * @uses    Arr::get
 	 */
 	protected function save($asset)
 	{
@@ -425,6 +435,8 @@ class Asset_Core_Local extends Asset {
 	 *
 	 * @param   array  $asset
 	 * @return  mixed
+     * @uses    HTML::style
+     * @uses    HTML::script
 	 */
 	protected function html($asset)
 	{

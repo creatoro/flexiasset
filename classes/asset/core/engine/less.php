@@ -15,6 +15,7 @@ class Asset_Core_Engine_Less extends Asset_Engine {
 	 * @param   string  $file_contents
 	 * @param   array   $asset
 	 * @return  mixed
+     * @uses    Kohana::find_file
 	 */
 	static public function process($file_contents, array $asset)
 	{

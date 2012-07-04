@@ -41,6 +41,7 @@ class Asset_Core {
 	 * @param   string  $name    instance name
 	 * @param   array   $config  configuration parameters
 	 * @return  Asset
+     * @uses    Kohana::$config
 	 */
 	public static function instance($name = NULL, array $config = NULL)
 	{
@@ -93,6 +94,8 @@ class Asset_Core {
 	 * @param   string  $name
 	 * @param   array   $config
 	 * @return  void
+     * @uses    Kohana_Exception
+     * @uses    Arr::get
 	 */
 	protected function __construct($name, array $config)
 	{
@@ -175,6 +178,7 @@ class Asset_Core {
 	 * @param   mixed   $protocol
 	 * @param   bool    $index
 	 * @return  Asset
+     * @uses    Arr::get
 	 */
 	protected function add($type, $file, $attributes, $protocol, $index)
 	{
@@ -216,6 +220,9 @@ class Asset_Core {
 	 * @param   string  $file
 	 * @param   array   $basic_info
 	 * @return  array
+     * @uses    Arr::merge
+     * @uses    Valid::url
+     * @uses    Arr::get
 	 */
 	protected function file_info($file, $basic_info)
 	{
@@ -266,6 +273,7 @@ class Asset_Core {
 	 *
 	 * @param   bool  $compile
 	 * @return  string
+     * @uses    Cache::instance
 	 */
 	public function render($compile = FALSE)
 	{
@@ -286,7 +294,8 @@ class Asset_Core {
 
         if ( ! $compile AND $this->_display_compiled AND ($cached_html = $cache->get('flexiasset.'.$this->_instance)))
         {
-            // Return cached HTML
+            // Return cached HTML when no compile is initiated, but compiled
+            // files are displayed (and cache is available)
             return $cached_html;
         }
 
@@ -314,11 +323,8 @@ class Asset_Core {
         // Set HTML
         $html = $local_html.$remote_html;
 
-        if ($compile)
-        {
-            // Cache HTML
-            $cache->set('flexiasset.'.$this->_instance, $html, (Date::YEAR * 10));
-        }
+        // Cache HTML
+        $cache->set('flexiasset.'.$this->_instance, $html, (Date::YEAR * 10));
 
 		return $html;
 	}
